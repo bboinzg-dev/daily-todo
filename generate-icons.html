@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<body>
+<canvas id="c192" width="192" height="192"></canvas>
+<canvas id="c512" width="512" height="512"></canvas>
+<script>
+function drawIcon(canvas) {
+  const s = canvas.width;
+  const ctx = canvas.getContext('2d');
+
+  // 배경 (둥근 사각형)
+  ctx.fillStyle = '#1a1a2e';
+  ctx.beginPath();
+  const r = s * 0.15;
+  ctx.moveTo(r, 0);
+  ctx.lineTo(s - r, 0);
+  ctx.quadraticCurveTo(s, 0, s, r);
+  ctx.lineTo(s, s - r);
+  ctx.quadraticCurveTo(s, s, s - r, s);
+  ctx.lineTo(r, s);
+  ctx.quadraticCurveTo(0, s, 0, s - r);
+  ctx.lineTo(0, r);
+  ctx.quadraticCurveTo(0, 0, r, 0);
+  ctx.fill();
+
+  // 체크마크 원
+  const cx = s * 0.5, cy = s * 0.42;
+  const cr = s * 0.22;
+  const grad = ctx.createLinearGradient(cx - cr, cy - cr, cx + cr, cy + cr);
+  grad.addColorStop(0, '#7c8aff');
+  grad.addColorStop(1, '#a78bfa');
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  ctx.arc(cx, cy, cr, 0, Math.PI * 2);
+  ctx.fill();
+
+  // 체크마크
+  ctx.strokeStyle = '#fff';
+  ctx.lineWidth = s * 0.04;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.beginPath();
+  ctx.moveTo(cx - cr*0.4, cy);
+  ctx.lineTo(cx - cr*0.1, cy + cr*0.35);
+  ctx.lineTo(cx + cr*0.4, cy - cr*0.25);
+  ctx.stroke();
+
+  // 텍스트 "Daily"
+  ctx.fillStyle = '#a78bfa';
+  ctx.font = `bold ${s * 0.12}px 'Segoe UI', sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.fillText('Daily', cx, s * 0.82);
+
+  return canvas;
+}
+
+drawIcon(document.getElementById('c192'));
+drawIcon(document.getElementById('c512'));
+
+// 다운로드 링크 생성
+['c192', 'c512'].forEach(id => {
+  const canvas = document.getElementById(id);
+  const link = document.createElement('a');
+  link.download = `icon-${canvas.width}.png`;
+  link.href = canvas.toDataURL('image/png');
+  link.textContent = `Download ${canvas.width}x${canvas.width}`;
+  link.style.display = 'block';
+  link.style.margin = '10px';
+  link.style.fontSize = '20px';
+  document.body.appendChild(link);
+  // 자동 다운로드
+  link.click();
+});
+</script>
+</body>
+</html>
