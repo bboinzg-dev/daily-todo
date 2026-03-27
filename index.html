@@ -5,810 +5,1024 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="theme-color" content="#7c8aff">
+  <meta name="theme-color" content="#0f0f1a">
   <link rel="manifest" href="./manifest.json">
   <link rel="apple-touch-icon" href="./icon-192.png">
   <title>Daily Todo</title>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-
-    body {
-      font-family: -apple-system, 'Malgun Gothic', 'Segoe UI', sans-serif;
-      background: #0f0f1a;
-      color: #e0e0e0;
-      min-height: 100vh;
-      min-height: 100dvh;
-      padding: 0;
-      overflow-x: hidden;
+    :root {
+      --bg: #0d0d16;
+      --card: #151524;
+      --card2: #1c1c30;
+      --border: #252540;
+      --text: #d0d0dd;
+      --text2: #8888a0;
+      --accent: #7b8aee;
+      --accent2: #9b8cd8;
+      --today: #5c6bc0;
+      --urgent: #c49060;
+      --done: #5a9e6f;
+      --archive: #7a7a90;
+      --danger: #c06060;
+      --safe-b: env(safe-area-inset-bottom, 0px);
     }
+    * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+    body { font-family:-apple-system,'Malgun Gothic','Segoe UI',sans-serif; background:var(--bg); color:var(--text); min-height:100dvh; overflow-x:hidden; font-size:15px; }
+    input,textarea,select,button { font-family:inherit; font-size:inherit; }
+    button { cursor:pointer; }
 
-    /* 상단 헤더 */
-    .app-header {
-      background: linear-gradient(135deg, #1a1a3e, #12122a);
-      padding: 20px 20px 24px;
-      text-align: center;
-      position: sticky;
-      top: 0;
-      z-index: 50;
-      border-bottom: 1px solid #2a2a4a;
-    }
+    /* ===== 잠금화면 ===== */
+    #lockScreen { position:fixed; inset:0; background:var(--bg); z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+    #lockScreen.hidden { display:none; }
+    .lock-title { font-size:1.6rem; font-weight:800; color:#fff; margin-bottom:8px; }
+    .lock-sub { color:var(--text2); font-size:0.85rem; margin-bottom:30px; }
+    .pin-dots { display:flex; gap:14px; margin-bottom:30px; }
+    .pin-dot { width:16px; height:16px; border-radius:50%; border:2px solid var(--border); transition:all 0.2s; }
+    .pin-dot.filled { background:var(--accent); border-color:var(--accent); }
+    .pin-dot.wrong { background:var(--danger); border-color:var(--danger); animation:shake 0.4s; }
+    @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-8px)} 75%{transform:translateX(8px)} }
+    .pin-pad { display:grid; grid-template-columns:repeat(3,72px); gap:12px; }
+    .pin-key { width:72px; height:72px; border-radius:50%; background:var(--card); border:1px solid var(--border); color:var(--text); font-size:1.5rem; font-weight:600; transition:all 0.15s; }
+    .pin-key:active { background:var(--accent); color:#fff; transform:scale(0.93); }
+    .pin-key.fn { font-size:0.8rem; color:var(--text2); }
+    .lock-setup { color:var(--text2); font-size:0.8rem; margin-top:20px; }
+    .lock-setup a { color:var(--accent); text-decoration:underline; cursor:pointer; }
 
-    .app-header h1 {
-      font-size: 1.5rem;
-      color: #fff;
-      font-weight: 800;
-      letter-spacing: -0.5px;
-    }
+    /* ===== 앱 레이아웃 ===== */
+    #app { display:none; }
+    #app.show { display:block; }
+    .top-bar { position:sticky; top:0; z-index:50; background:linear-gradient(180deg,var(--bg) 60%,transparent); padding:14px 18px 20px; }
+    .top-row { display:flex; align-items:center; justify-content:space-between; }
+    .top-date { font-size:0.82rem; color:var(--text2); }
+    .top-title { font-size:1.25rem; font-weight:800; color:#fff; }
+    .btn-lock { background:none; border:none; color:var(--text2); font-size:1.1rem; padding:6px; }
 
-    .date-display {
-      font-size: 0.85rem;
-      color: #8888aa;
-      margin-top: 4px;
-    }
+    /* ===== 탭 바 ===== */
+    .tab-bar { position:fixed; bottom:0; left:0; right:0; background:var(--card); border-top:1px solid var(--border); display:flex; z-index:90; padding-bottom:var(--safe-b); }
+    .tab-btn { flex:1; padding:10px 0 8px; background:none; border:none; color:var(--text2); font-size:0.65rem; display:flex; flex-direction:column; align-items:center; gap:3px; transition:color 0.2s; }
+    .tab-btn.active { color:var(--accent); }
+    .tab-btn svg { width:22px; height:22px; }
+    .tab-badge { background:var(--accent); color:#fff; font-size:0.55rem; border-radius:10px; padding:1px 5px; position:absolute; margin-top:-4px; margin-left:12px; }
 
-    /* 진행률 */
-    .progress-section {
-      padding: 16px 20px 0;
-    }
+    /* ===== 페이지 공통 ===== */
+    .page { display:none; padding:0 16px 100px; max-width:600px; margin:0 auto; }
+    .page.active { display:block; }
+    .sec { margin-bottom:22px; }
+    .sec-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; padding:0 2px; }
+    .sec-title { font-size:0.92rem; font-weight:700; color:var(--accent2); }
+    .sec-count { font-size:0.7rem; color:var(--text2); background:var(--card); padding:2px 10px; border-radius:12px; }
+    .sec-btn { background:none; border:1px solid var(--border); color:var(--text2); padding:4px 12px; border-radius:8px; font-size:0.72rem; }
+    .sec-btn:active { border-color:var(--accent); color:var(--accent); }
 
-    .progress-info {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 8px;
-    }
+    /* ===== 검색바 ===== */
+    .search-bar { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:10px 14px; color:var(--text); width:100%; outline:none; margin-bottom:14px; font-size:0.9rem; }
+    .search-bar:focus { border-color:var(--accent); }
+    .search-bar::placeholder { color:#555; }
 
-    .progress-label {
-      font-size: 0.8rem;
-      color: #888;
-    }
+    /* ===== 할일 아이템 ===== */
+    .t-item { background:var(--card); border-radius:12px; padding:12px 14px; margin-bottom:7px; transition:all 0.15s; position:relative; }
+    .t-item:active { transform:scale(0.985); background:var(--card2); }
+    .t-top { display:flex; align-items:center; gap:10px; }
+    .t-check { width:24px; height:24px; border:2px solid var(--border); border-radius:7px; flex-shrink:0; display:flex; align-items:center; justify-content:center; transition:all 0.2s; }
+    .t-check.checked { background:var(--done); border-color:var(--done); }
+    .t-check svg { width:14px; height:14px; opacity:0; transition:all 0.2s; }
+    .t-check.checked svg { opacity:1; }
+    .t-info { flex:1; min-width:0; }
+    .t-title { font-size:0.92rem; line-height:1.3; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .t-meta { font-size:0.72rem; color:var(--text2); margin-top:2px; display:flex; gap:8px; flex-wrap:wrap; }
+    .t-tag { padding:1px 7px; border-radius:6px; font-size:0.65rem; font-weight:600; }
+    .t-tag.today { background:rgba(92,107,192,0.2); color:var(--today); }
+    .t-tag.urgent { background:rgba(196,144,96,0.15); color:var(--urgent); }
+    .t-tag.future { background:rgba(120,120,150,0.15); color:var(--text2); }
+    .t-actions { display:flex; gap:2px; flex-shrink:0; }
+    .t-btn { background:none; border:none; color:var(--text2); padding:5px; font-size:0.85rem; border-radius:6px; }
+    .t-btn:active { color:var(--accent); }
 
-    .progress-pct {
-      font-size: 0.85rem;
-      font-weight: 700;
-      color: #a78bfa;
-    }
+    /* ===== 고정 루틴 ===== */
+    .routine-item { display:flex; align-items:center; gap:10px; padding:10px 14px; background:var(--card); border-radius:10px; margin-bottom:5px; }
+    .routine-item:active { background:var(--card2); }
+    .routine-item.done { opacity:0.4; }
+    .routine-item.done .r-text { text-decoration:line-through; }
+    .r-text { flex:1; font-size:0.88rem; }
 
-    .progress-bar-bg {
-      background: #1a1a2e;
-      border-radius: 20px;
-      height: 10px;
-      overflow: hidden;
-    }
+    /* ===== 달력 ===== */
+    .cal { background:var(--card); border-radius:14px; padding:14px; }
+    .cal-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+    .cal-title { font-size:0.9rem; font-weight:700; color:var(--text); }
+    .cal-nav { background:none; border:none; color:var(--text2); font-size:1.1rem; padding:4px 8px; }
+    .cal-nav:active { color:var(--accent); }
+    .cal-grid { display:grid; grid-template-columns:repeat(7,1fr); text-align:center; gap:2px; }
+    .cal-day-name { font-size:0.65rem; color:var(--text2); padding:4px 0; }
+    .cal-day { font-size:0.78rem; padding:6px 0; border-radius:8px; color:var(--text2); position:relative; cursor:pointer; }
+    .cal-day:active { background:var(--card2); }
+    .cal-day.today { color:#fff; font-weight:700; background:var(--today); }
+    .cal-day.selected { outline:2px solid var(--accent); }
+    .cal-day.has-task::after { content:''; position:absolute; bottom:2px; left:50%; transform:translateX(-50%); width:4px; height:4px; border-radius:50%; background:var(--accent); }
+    .cal-day.other { opacity:0.3; }
 
-    .progress-bar-fill {
-      height: 100%;
-      background: linear-gradient(90deg, #7c8aff, #a78bfa, #c084fc);
-      border-radius: 20px;
-      transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-    }
+    /* ===== 메모 ===== */
+    .memo-area { background:var(--card); border-radius:12px; padding:12px 14px; }
+    .memo-input { width:100%; background:transparent; border:none; color:var(--text); resize:none; outline:none; font-size:0.88rem; line-height:1.6; min-height:60px; }
+    .memo-input::placeholder { color:#555; }
+    .memo-list { margin-top:8px; }
+    .memo-item { padding:8px 10px; background:var(--bg); border-radius:8px; margin-bottom:5px; font-size:0.82rem; display:flex; justify-content:space-between; align-items:flex-start; gap:8px; }
+    .memo-item .m-text { flex:1; line-height:1.4; white-space:pre-wrap; word-break:break-word; }
+    .memo-item .m-date { font-size:0.65rem; color:var(--text2); white-space:nowrap; }
+    .memo-item .m-del { background:none; border:none; color:#555; font-size:0.8rem; padding:0 2px; flex-shrink:0; }
 
-    /* 컨텐츠 영역 */
-    .content {
-      padding: 20px 16px 120px;
-      max-width: 600px;
-      margin: 0 auto;
-    }
+    /* ===== 연락처 ===== */
+    .c-item { background:var(--card); border-radius:12px; padding:12px 14px; margin-bottom:7px; }
+    .c-item:active { background:var(--card2); }
+    .c-name { font-size:0.95rem; font-weight:600; }
+    .c-detail { font-size:0.78rem; color:var(--text2); margin-top:3px; display:flex; flex-wrap:wrap; gap:6px; }
+    .c-detail span { display:flex; align-items:center; gap:3px; }
 
-    /* 섹션 */
-    .section {
-      margin-bottom: 24px;
-    }
+    /* ===== 모달 ===== */
+    .modal-bg { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:200; align-items:flex-end; justify-content:center; }
+    .modal-bg.open { display:flex; }
+    .modal { background:var(--card); border-radius:18px 18px 0 0; width:100%; max-width:600px; max-height:90vh; overflow-y:auto; padding:20px 18px; padding-bottom:calc(20px + var(--safe-b)); animation:slideUp 0.3s ease; }
+    @keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
+    .modal-handle { width:36px; height:4px; background:var(--border); border-radius:2px; margin:0 auto 16px; }
+    .modal-head { font-size:1.05rem; font-weight:700; color:#fff; margin-bottom:16px; }
+    .form-group { margin-bottom:14px; }
+    .form-label { font-size:0.78rem; color:var(--text2); margin-bottom:5px; display:block; }
+    .form-input { width:100%; background:var(--bg); border:1.5px solid var(--border); border-radius:10px; padding:11px 14px; color:var(--text); outline:none; }
+    .form-input:focus { border-color:var(--accent); }
+    .form-input::placeholder { color:#555; }
+    textarea.form-input { resize:none; min-height:70px; line-height:1.5; }
+    .form-row { display:flex; gap:10px; }
+    .form-row > * { flex:1; }
+    .form-check { display:flex; align-items:center; gap:8px; font-size:0.85rem; color:var(--text2); cursor:pointer; }
+    .form-check input { accent-color:var(--accent); width:18px; height:18px; }
+    .btn-primary { width:100%; padding:14px; background:linear-gradient(135deg,var(--accent),var(--accent2)); border:none; border-radius:12px; color:#fff; font-size:0.95rem; font-weight:700; }
+    .btn-primary:active { opacity:0.85; transform:scale(0.98); }
+    .btn-secondary { width:100%; padding:12px; background:var(--card2); border:none; border-radius:10px; color:var(--text); font-size:0.9rem; margin-top:8px; }
+    .btn-row { display:flex; gap:8px; margin-top:12px; }
+    .btn-row button { flex:1; padding:12px; border:none; border-radius:10px; font-size:0.88rem; font-weight:600; }
+    .btn-done { background:rgba(90,158,111,0.2); color:var(--done); }
+    .btn-archive { background:rgba(122,122,144,0.15); color:var(--archive); }
+    .btn-restore { background:rgba(123,138,238,0.15); color:var(--accent); }
+    .btn-danger { background:rgba(192,96,96,0.15); color:var(--danger); }
+    .btn-edit { background:rgba(123,138,238,0.15); color:var(--accent); }
 
-    .section-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 10px;
-      padding: 0 4px;
-    }
+    /* ===== FAB ===== */
+    .fab { position:fixed; bottom:calc(68px + var(--safe-b)); right:18px; width:56px; height:56px; border-radius:50%; background:linear-gradient(135deg,var(--accent),var(--accent2)); border:none; color:#fff; font-size:1.8rem; z-index:80; box-shadow:0 4px 20px rgba(123,138,238,0.3); display:flex; align-items:center; justify-content:center; }
+    .fab:active { transform:scale(0.9); }
 
-    .section-title {
-      font-size: 1rem;
-      font-weight: 700;
-      color: #a78bfa;
-    }
+    /* ===== 토스트 ===== */
+    .toast { position:fixed; top:70px; left:50%; transform:translateX(-50%) translateY(-20px); background:var(--card2); color:var(--text); padding:10px 24px; border-radius:12px; font-size:0.82rem; z-index:500; opacity:0; transition:all 0.3s; pointer-events:none; }
+    .toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
 
-    .section-count {
-      font-size: 0.75rem;
-      color: #666;
-      background: #1a1a2e;
-      padding: 3px 10px;
-      border-radius: 20px;
-    }
+    /* ===== 빈 상태 ===== */
+    .empty { text-align:center; padding:30px 16px; color:#444; font-size:0.88rem; line-height:1.6; }
 
-    /* 할일 아이템 */
-    .task-list {
-      list-style: none;
-    }
+    /* ===== 엑셀 다운로드 ===== */
+    .btn-download { display:flex; align-items:center; justify-content:center; gap:6px; padding:12px; background:var(--card); border:1px solid var(--border); border-radius:10px; color:var(--text2); font-size:0.85rem; width:100%; margin-bottom:14px; }
+    .btn-download:active { border-color:var(--done); color:var(--done); }
 
-    .task-item {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      padding: 14px 16px;
-      background: #1a1a2e;
-      border-radius: 14px;
-      margin-bottom: 8px;
-      transition: all 0.2s ease;
-      -webkit-user-select: none;
-      user-select: none;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .task-item:active {
-      transform: scale(0.98);
-      background: #22223a;
-    }
-
-    .task-item.done {
-      opacity: 0.45;
-    }
-
-    .task-item.done .task-text {
-      text-decoration: line-through;
-      color: #555;
-    }
-
-    /* 체크박스 */
-    .check {
-      width: 26px;
-      height: 26px;
-      border: 2.5px solid #3a3a5a;
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-      transition: all 0.25s ease;
-    }
-
-    .task-item.done .check {
-      background: linear-gradient(135deg, #7c8aff, #a78bfa);
-      border-color: transparent;
-    }
-
-    .check svg {
-      width: 16px;
-      height: 16px;
-      opacity: 0;
-      transform: scale(0.5);
-      transition: all 0.25s ease;
-    }
-
-    .task-item.done .check svg {
-      opacity: 1;
-      transform: scale(1);
-    }
-
-    .task-text {
-      flex: 1;
-      font-size: 0.95rem;
-      line-height: 1.4;
-      transition: all 0.2s;
-    }
-
-    /* 삭제 버튼 (스와이프 대신 길게 누르기 또는 X 버튼) */
-    .btn-delete {
-      background: none;
-      border: none;
-      color: #444;
-      font-size: 1.1rem;
-      padding: 6px 2px 6px 8px;
-      cursor: pointer;
-      transition: color 0.2s;
-      flex-shrink: 0;
-    }
-
-    .btn-delete:active {
-      color: #ff6b6b;
-    }
-
-    /* 하단 고정 입력바 */
-    .bottom-bar {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: #12122a;
-      border-top: 1px solid #2a2a4a;
-      padding: 12px 16px;
-      padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
-      z-index: 50;
-    }
-
-    .input-row {
-      display: flex;
-      gap: 10px;
-      max-width: 600px;
-      margin: 0 auto;
-    }
-
-    .todo-input {
-      flex: 1;
-      background: #1a1a2e;
-      border: 2px solid #2a2a4a;
-      border-radius: 14px;
-      padding: 14px 18px;
-      color: #e0e0e0;
-      font-size: 1rem;
-      outline: none;
-      transition: border-color 0.2s;
-    }
-
-    .todo-input:focus {
-      border-color: #7c8aff;
-    }
-
-    .todo-input::placeholder {
-      color: #555;
-    }
-
-    .btn-submit {
-      background: linear-gradient(135deg, #7c8aff, #a78bfa);
-      border: none;
-      border-radius: 14px;
-      color: white;
-      font-size: 1.5rem;
-      width: 54px;
-      cursor: pointer;
-      transition: transform 0.15s;
-      flex-shrink: 0;
-    }
-
-    .btn-submit:active {
-      transform: scale(0.92);
-    }
-
-    /* 루틴 관리 버튼 */
-    .btn-manage {
-      background: none;
-      border: 1.5px solid #3a3a5a;
-      color: #777;
-      padding: 5px 14px;
-      border-radius: 8px;
-      font-size: 0.78rem;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .btn-manage:active {
-      border-color: #7c8aff;
-      color: #7c8aff;
-    }
-
-    /* 빈 상태 */
-    .empty {
-      text-align: center;
-      padding: 24px 16px;
-      color: #444;
-      font-size: 0.9rem;
-      line-height: 1.6;
-    }
-
-    /* ===== 모달 (루틴 관리) ===== */
-    .modal-bg {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.6);
-      z-index: 200;
-      align-items: flex-end;
-      justify-content: center;
-    }
-
-    .modal-bg.open {
-      display: flex;
-    }
-
-    .modal-sheet {
-      background: #1a1a2e;
-      border-radius: 20px 20px 0 0;
-      width: 100%;
-      max-width: 600px;
-      max-height: 85vh;
-      overflow-y: auto;
-      padding: 24px 20px;
-      padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px));
-      animation: slideUp 0.3s ease;
-    }
-
-    @keyframes slideUp {
-      from { transform: translateY(100%); }
-      to { transform: translateY(0); }
-    }
-
-    .modal-handle {
-      width: 40px;
-      height: 4px;
-      background: #3a3a5a;
-      border-radius: 2px;
-      margin: 0 auto 20px;
-    }
-
-    .modal-title {
-      font-size: 1.15rem;
-      font-weight: 700;
-      color: #e0e0e0;
-      margin-bottom: 16px;
-    }
-
-    .modal-input-row {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 16px;
-    }
-
-    .modal-input {
-      flex: 1;
-      background: #12121f;
-      border: 2px solid #2a2a4a;
-      border-radius: 12px;
-      padding: 12px 16px;
-      color: #e0e0e0;
-      font-size: 0.95rem;
-      outline: none;
-      transition: border-color 0.2s;
-    }
-
-    .modal-input:focus {
-      border-color: #7c8aff;
-    }
-
-    .modal-input::placeholder {
-      color: #555;
-    }
-
-    .modal-btn-add {
-      background: linear-gradient(135deg, #7c8aff, #a78bfa);
-      border: none;
-      border-radius: 12px;
-      color: white;
-      font-size: 1.3rem;
-      width: 50px;
-      cursor: pointer;
-      flex-shrink: 0;
-    }
-
-    .modal-btn-add:active {
-      transform: scale(0.92);
-    }
-
-    .routine-item {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 12px 14px;
-      background: #12121f;
-      border-radius: 10px;
-      margin-bottom: 6px;
-    }
-
-    .routine-item .r-text {
-      flex: 1;
-      font-size: 0.9rem;
-      color: #ccc;
-    }
-
-    .routine-item .r-btn {
-      background: none;
-      border: none;
-      color: #555;
-      font-size: 0.95rem;
-      padding: 4px 6px;
-      cursor: pointer;
-    }
-
-    .routine-item .r-btn:active {
-      color: #ff6b6b;
-    }
-
-    .routine-item .r-btn.edit:active {
-      color: #7c8aff;
-    }
-
-    .btn-close-sheet {
-      margin-top: 16px;
-      width: 100%;
-      padding: 14px;
-      background: #2a2a4a;
-      border: none;
-      border-radius: 12px;
-      color: #e0e0e0;
-      font-size: 1rem;
-      font-weight: 600;
-      cursor: pointer;
-    }
-
-    .btn-close-sheet:active {
-      background: #3a3a5a;
-    }
-
-    /* 토스트 알림 */
-    .toast {
-      position: fixed;
-      top: 80px;
-      left: 50%;
-      transform: translateX(-50%) translateY(-20px);
-      background: #2a2a4a;
-      color: #e0e0e0;
-      padding: 10px 24px;
-      border-radius: 12px;
-      font-size: 0.85rem;
-      z-index: 300;
-      opacity: 0;
-      transition: all 0.3s ease;
-      pointer-events: none;
-    }
-
-    .toast.show {
-      opacity: 1;
-      transform: translateX(-50%) translateY(0);
-    }
-
-    /* 완료 축하 애니메이션 */
-    .confetti {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      z-index: 999;
-    }
+    /* 연락처 선택 */
+    .contact-pick { display:flex; flex-wrap:wrap; gap:6px; margin-top:6px; }
+    .contact-chip { padding:4px 10px; border-radius:8px; font-size:0.75rem; border:1px solid var(--border); color:var(--text2); cursor:pointer; }
+    .contact-chip.selected { background:var(--accent); border-color:var(--accent); color:#fff; }
   </style>
 </head>
 <body>
 
-  <!-- 상단 헤더 -->
-  <div class="app-header">
-    <h1>Daily Todo</h1>
-    <div class="date-display" id="dateDisplay"></div>
+<!-- ===== 잠금화면 ===== -->
+<div id="lockScreen">
+  <div class="lock-title">Daily Todo</div>
+  <div class="lock-sub" id="lockSub">PIN 4자리를 입력하세요</div>
+  <div class="pin-dots" id="pinDots">
+    <div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div>
+  </div>
+  <div class="pin-pad" id="pinPad">
+    <button class="pin-key" data-v="1">1</button>
+    <button class="pin-key" data-v="2">2</button>
+    <button class="pin-key" data-v="3">3</button>
+    <button class="pin-key" data-v="4">4</button>
+    <button class="pin-key" data-v="5">5</button>
+    <button class="pin-key" data-v="6">6</button>
+    <button class="pin-key" data-v="7">7</button>
+    <button class="pin-key" data-v="8">8</button>
+    <button class="pin-key" data-v="9">9</button>
+    <button class="pin-key fn" data-v="reset" id="btnPinReset" style="visibility:hidden">PIN 초기화</button>
+    <button class="pin-key" data-v="0">0</button>
+    <button class="pin-key fn" data-v="del">⌫</button>
+  </div>
+  <div class="lock-setup" id="lockSetup"></div>
+</div>
+
+<!-- ===== 앱 본체 ===== -->
+<div id="app">
+  <div class="top-bar">
+    <div class="top-row">
+      <div>
+        <div class="top-date" id="topDate"></div>
+        <div class="top-title" id="topTitle">할 일</div>
+      </div>
+      <button class="btn-lock" id="btnLogout" title="잠금">🔒</button>
+    </div>
   </div>
 
-  <!-- 진행률 -->
-  <div class="progress-section">
-    <div class="progress-info">
-      <span class="progress-label">오늘의 진행률</span>
-      <span class="progress-pct" id="progressPct">0%</span>
-    </div>
-    <div class="progress-bar-bg">
-      <div class="progress-bar-fill" id="progressBar" style="width: 0%"></div>
-    </div>
-  </div>
-
-  <!-- 컨텐츠 -->
-  <div class="content">
+  <!-- 할일 페이지 -->
+  <div class="page active" id="pageTodo">
+    <input type="text" class="search-bar" id="searchTodo" placeholder="할 일 검색..." />
 
     <!-- 고정 루틴 -->
-    <div class="section">
-      <div class="section-header">
-        <span class="section-title">고정 루틴</span>
-        <div style="display:flex;gap:8px;align-items:center">
-          <span class="section-count" id="routineCount">0/0</span>
-          <button class="btn-manage" id="btnManage">관리</button>
+    <div class="sec" id="secRoutine">
+      <div class="sec-head">
+        <span class="sec-title">고정 루틴</span>
+        <div style="display:flex;gap:6px;align-items:center">
+          <span class="sec-count" id="routineCount">0/0</span>
+          <button class="sec-btn" id="btnManageRoutine">관리</button>
         </div>
       </div>
-      <ul class="task-list" id="routineList"></ul>
+      <div id="routineList"></div>
     </div>
 
     <!-- 오늘 할일 -->
-    <div class="section">
-      <div class="section-header">
-        <span class="section-title">오늘 할일</span>
-        <span class="section-count" id="todoCount">0/0</span>
+    <div class="sec">
+      <div class="sec-head"><span class="sec-title">오늘</span><span class="sec-count" id="todayCount">0</span></div>
+      <div id="todayList"></div>
+    </div>
+
+    <!-- 기한 미정 (긴급) -->
+    <div class="sec" id="secUrgent">
+      <div class="sec-head"><span class="sec-title">며칠 내 해야 할 일</span><span class="sec-count" id="urgentCount">0</span></div>
+      <div id="urgentList"></div>
+    </div>
+
+    <!-- 예정된 할일 -->
+    <div class="sec" id="secFuture">
+      <div class="sec-head"><span class="sec-title">예정</span><span class="sec-count" id="futureCount">0</span></div>
+      <div id="futureList"></div>
+    </div>
+
+    <!-- 달력 -->
+    <div class="sec">
+      <div class="sec-head"><span class="sec-title">달력</span></div>
+      <div class="cal" id="calTodo"></div>
+    </div>
+
+    <!-- 메모 -->
+    <div class="sec">
+      <div class="sec-head"><span class="sec-title">빠른 메모</span></div>
+      <div class="memo-area">
+        <div style="display:flex;gap:8px">
+          <textarea class="memo-input" id="memoInput" placeholder="급하게 적을 메모..." rows="2"></textarea>
+          <button class="sec-btn" style="align-self:flex-end;padding:8px 14px" id="btnAddMemo">저장</button>
+        </div>
+        <div class="memo-list" id="memoList"></div>
       </div>
-      <ul class="task-list" id="todoList"></ul>
     </div>
   </div>
 
-  <!-- 하단 입력바 -->
-  <div class="bottom-bar">
-    <div class="input-row">
-      <input type="text" class="todo-input" id="todoInput" placeholder="새 할일을 입력하세요" enterkeyhint="done" />
-      <button class="btn-submit" id="btnAdd">+</button>
+  <!-- 해낸일 페이지 -->
+  <div class="page" id="pageDone">
+    <button class="btn-download" id="btnExcel">📥 엑셀 다운로드 (해낸 일 목록)</button>
+    <input type="text" class="search-bar" id="searchDone" placeholder="해낸 일 검색..." />
+    <div class="sec">
+      <div class="sec-head"><span class="sec-title">해낸 일</span><span class="sec-count" id="doneCount">0</span></div>
+      <div id="doneList"></div>
+    </div>
+    <div class="sec">
+      <div class="sec-head"><span class="sec-title">달력</span></div>
+      <div class="cal" id="calDone"></div>
     </div>
   </div>
 
-  <!-- 루틴 관리 모달 (바텀 시트) -->
-  <div class="modal-bg" id="modalBg">
-    <div class="modal-sheet" id="modalSheet">
-      <div class="modal-handle"></div>
-      <div class="modal-title">고정 루틴 관리</div>
-      <div class="modal-input-row">
-        <input type="text" class="modal-input" id="routineInput" placeholder="새 루틴 추가" enterkeyhint="done" />
-        <button class="modal-btn-add" id="btnAddRoutine">+</button>
+  <!-- 임시보관 페이지 -->
+  <div class="page" id="pageArchive">
+    <div class="sec">
+      <div class="sec-head"><span class="sec-title">임시 보관</span><span class="sec-count" id="archiveCount">0</span></div>
+      <div id="archiveList"></div>
+    </div>
+  </div>
+
+  <!-- 연락처 페이지 -->
+  <div class="page" id="pageContact">
+    <input type="text" class="search-bar" id="searchContact" placeholder="연락처 검색..." />
+    <div id="contactList"></div>
+  </div>
+
+  <!-- FAB -->
+  <button class="fab" id="fab">+</button>
+
+  <!-- 탭 바 -->
+  <div class="tab-bar">
+    <button class="tab-btn active" data-page="pageTodo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+      할 일
+    </button>
+    <button class="tab-btn" data-page="pageDone">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9 12l2 2 4-4"/></svg>
+      해낸 일
+    </button>
+    <button class="tab-btn" data-page="pageArchive">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="5" rx="1"/><path d="M4 8v11a2 2 0 002 2h12a2 2 0 002-2V8"/><path d="M10 12h4"/></svg>
+      임시보관
+    </button>
+    <button class="tab-btn" data-page="pageContact">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4-4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+      연락처
+    </button>
+  </div>
+</div>
+
+<!-- ===== 모달: 할일 추가/수정 ===== -->
+<div class="modal-bg" id="modalTask">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-head" id="modalTaskTitle">새 할일 추가</div>
+    <input type="hidden" id="taskEditId" />
+    <div class="form-group">
+      <label class="form-label">할 일</label>
+      <input type="text" class="form-input" id="fTitle" placeholder="할 일 내용" />
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">날짜</label>
+        <input type="date" class="form-input" id="fDate" />
       </div>
-      <div id="routineManageList"></div>
-      <button class="btn-close-sheet" id="btnCloseModal">닫기</button>
+      <div class="form-group">
+        <label class="form-label">시간</label>
+        <input type="time" class="form-input" id="fTime" />
+      </div>
     </div>
+    <div class="form-group">
+      <label class="form-check"><input type="checkbox" id="fUrgent" /> 기한 미정이지만 며칠 내 해야 함</label>
+    </div>
+    <div class="form-group">
+      <label class="form-label">상세 정보 / 준비사항</label>
+      <textarea class="form-input" id="fDesc" placeholder="관련 정보, 준비사항 등"></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">관련 연락처</label>
+      <div class="contact-pick" id="fContacts"></div>
+    </div>
+    <button class="btn-primary" id="btnSaveTask">저장</button>
+    <button class="btn-secondary" onclick="closeModal('modalTask')">취소</button>
   </div>
+</div>
 
-  <!-- 토스트 -->
-  <div class="toast" id="toast"></div>
+<!-- ===== 모달: 할일 상세 ===== -->
+<div class="modal-bg" id="modalDetail">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-head" id="detailTitle"></div>
+    <div id="detailBody" style="font-size:0.88rem;line-height:1.6;color:var(--text2);margin-bottom:16px;white-space:pre-wrap"></div>
+    <div id="detailContacts" style="margin-bottom:12px"></div>
+    <div id="detailMeta" style="font-size:0.75rem;color:var(--text2);margin-bottom:16px"></div>
+    <div class="btn-row" id="detailActions"></div>
+    <button class="btn-secondary" onclick="closeModal('modalDetail')">닫기</button>
+  </div>
+</div>
 
-  <script>
-    // ====== 데이터 ======
-    const KEY = 'dailyTodo_v2';
+<!-- ===== 모달: 연락처 추가/수정 ===== -->
+<div class="modal-bg" id="modalContact">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-head" id="modalContactTitle">연락처 추가</div>
+    <input type="hidden" id="contactEditId" />
+    <div class="form-group"><label class="form-label">이름</label><input type="text" class="form-input" id="cName" placeholder="이름" /></div>
+    <div class="form-group"><label class="form-label">소속</label><input type="text" class="form-input" id="cOrg" placeholder="소속/회사" /></div>
+    <div class="form-group"><label class="form-label">직급</label><input type="text" class="form-input" id="cPos" placeholder="직급" /></div>
+    <div class="form-group"><label class="form-label">전화번호</label><input type="tel" class="form-input" id="cPhone" placeholder="010-0000-0000" /></div>
+    <div class="form-group"><label class="form-label">이메일</label><input type="email" class="form-input" id="cEmail" placeholder="email@example.com" /></div>
+    <div class="form-group"><label class="form-label">메모</label><textarea class="form-input" id="cMemo" placeholder="메모" rows="2"></textarea></div>
+    <button class="btn-primary" id="btnSaveContact">저장</button>
+    <button class="btn-secondary" onclick="closeModal('modalContact')">취소</button>
+  </div>
+</div>
 
-    const DEFAULTS = [
-      '기상 후 물 한 잔',
-      '스트레칭 10분',
-      '오늘 할일 정리',
-      '운동 30분',
-      '독서 20분',
-      '하루 회고 작성',
-    ];
+<!-- ===== 모달: 루틴 관리 ===== -->
+<div class="modal-bg" id="modalRoutine">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-head">고정 루틴 관리</div>
+    <div style="display:flex;gap:8px;margin-bottom:14px">
+      <input type="text" class="form-input" id="newRoutineInput" placeholder="새 루틴 추가" />
+      <button class="sec-btn" style="padding:10px 16px;white-space:nowrap" id="btnAddRoutine">추가</button>
+    </div>
+    <div id="routineManageList"></div>
+    <button class="btn-secondary" onclick="closeModal('modalRoutine');renderAll()">닫기</button>
+  </div>
+</div>
 
-    function today() {
-      const d = new Date();
-      return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+<div class="toast" id="toast"></div>
+
+<script>
+// ==================== 데이터 ====================
+const KEY = 'dailyTodo_v3';
+const PIN_KEY = 'dailyTodo_pin';
+
+const DEFAULT_ROUTINES = ['기상 후 물 한 잔','스트레칭 10분','오늘 할일 정리','운동 30분','독서 20분','하루 회고 작성'];
+
+function todayStr() {
+  const d = new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function dateLabel(ds) {
+  if (!ds) return '';
+  const d = new Date(ds+'T00:00:00');
+  return (d.getMonth()+1)+'/'+d.getDate()+'('+['일','월','화','수','목','금','토'][d.getDay()]+')';
+}
+function timeLabel(ts) { return ts || ''; }
+
+function load() { try { return JSON.parse(localStorage.getItem(KEY)); } catch { return null; } }
+function save() { localStorage.setItem(KEY, JSON.stringify(S)); }
+
+let S = load();
+const td = todayStr();
+
+if (!S) {
+  S = { routines:DEFAULT_ROUTINES.slice(), rChecks:{}, tasks:[], contacts:[], memos:[], lastDate:td };
+  S.rChecks[td] = new Array(S.routines.length).fill(false);
+  save();
+}
+
+// 날짜 변경 → 루틴 리셋 + 미완료 오늘 할일 이월
+if (S.lastDate !== td) {
+  S.rChecks[td] = new Array(S.routines.length).fill(false);
+  // 어제 이전 날짜 할일 중 미완료 → 오늘로 이월
+  S.tasks.forEach(t => {
+    if (t.status === 'todo' && t.date && t.date < td) t.date = td;
+  });
+  S.lastDate = td;
+  Object.keys(S.rChecks).forEach(k => { if ((new Date(td)-new Date(k))/864e5 > 14) delete S.rChecks[k]; });
+  save();
+}
+if (!S.rChecks[td] || S.rChecks[td].length !== S.routines.length) {
+  const old = S.rChecks[td] || [];
+  S.rChecks[td] = S.routines.map((_,i) => old[i] || false);
+  save();
+}
+if (!S.memos) { S.memos = []; save(); }
+
+// ==================== PIN 잠금 ====================
+let pinBuf = '';
+let pinMode = 'login'; // login, setup, confirm
+let pinSetupVal = '';
+const lockEl = document.getElementById('lockScreen');
+const dotsEl = document.getElementById('pinDots').children;
+const lockSub = document.getElementById('lockSub');
+const pinResetBtn = document.getElementById('btnPinReset');
+
+function hasPin() { return !!localStorage.getItem(PIN_KEY); }
+function hashPin(p) { let h=0; for(let i=0;i<p.length;i++){h=((h<<5)-h)+p.charCodeAt(i);h|=0;} return String(h); }
+
+function initLock() {
+  if (!hasPin()) {
+    pinMode = 'setup';
+    lockSub.textContent = '새 PIN 4자리를 설정하세요';
+    pinResetBtn.style.visibility = 'hidden';
+  } else {
+    pinMode = 'login';
+    lockSub.textContent = 'PIN 4자리를 입력하세요';
+    pinResetBtn.style.visibility = 'visible';
+  }
+  pinBuf = '';
+  updateDots();
+}
+
+function updateDots(wrong) {
+  Array.from(dotsEl).forEach((d,i) => {
+    d.className = 'pin-dot' + (i < pinBuf.length ? ' filled' : '') + (wrong ? ' wrong' : '');
+  });
+}
+
+function handlePin(v) {
+  if (v === 'del') { pinBuf = pinBuf.slice(0,-1); updateDots(); return; }
+  if (v === 'reset') {
+    if (confirm('PIN을 초기화하면 데이터도 모두 삭제됩니다. 계속할까요?')) {
+      localStorage.removeItem(PIN_KEY);
+      localStorage.removeItem(KEY);
+      S = null;
+      location.reload();
     }
+    return;
+  }
+  if (pinBuf.length >= 4) return;
+  pinBuf += v;
+  updateDots();
 
-    function load() {
-      try { return JSON.parse(localStorage.getItem(KEY)); } catch { return null; }
-    }
-
-    function save() {
-      localStorage.setItem(KEY, JSON.stringify(state));
-    }
-
-    // 초기화
-    let state = load();
-    const t = today();
-
-    if (!state) {
-      state = {
-        routines: DEFAULTS.slice(),
-        checks: {},
-        todos: [],
-        lastDate: t,
-      };
-      state.checks[t] = new Array(state.routines.length).fill(false);
-      save();
-    }
-
-    // 날짜 바뀌면 루틴 리셋
-    if (state.lastDate !== t) {
-      state.checks[t] = new Array(state.routines.length).fill(false);
-      state.lastDate = t;
-      // 7일 지난 기록 정리
-      Object.keys(state.checks).forEach(k => {
-        if ((new Date(t) - new Date(k)) / 86400000 > 7) delete state.checks[k];
-      });
-      save();
-    }
-
-    // 루틴 개수 맞추기
-    if (!state.checks[t] || state.checks[t].length !== state.routines.length) {
-      const old = state.checks[t] || [];
-      state.checks[t] = state.routines.map((_, i) => old[i] || false);
-      save();
-    }
-
-    // ====== 토스트 ======
-    let toastTimer = null;
-    function showToast(msg) {
-      const el = document.getElementById('toast');
-      el.textContent = msg;
-      el.classList.add('show');
-      clearTimeout(toastTimer);
-      toastTimer = setTimeout(() => el.classList.remove('show'), 1800);
-    }
-
-    // ====== 렌더링 ======
-    function render() {
-      renderDate();
-      renderRoutines();
-      renderTodos();
-      renderProgress();
-    }
-
-    function renderDate() {
-      const d = new Date();
-      const days = ['일', '월', '화', '수', '목', '금', '토'];
-      document.getElementById('dateDisplay').textContent =
-        d.getFullYear() + '년 ' + (d.getMonth()+1) + '월 ' + d.getDate() + '일 (' + days[d.getDay()] + ')';
-    }
-
-    function renderRoutines() {
-      const list = document.getElementById('routineList');
-      const checks = state.checks[t] || [];
-
-      if (state.routines.length === 0) {
-        list.innerHTML = '<div class="empty">고정 루틴이 없습니다<br>아래 [관리] 버튼으로 추가해보세요</div>';
+  if (pinBuf.length === 4) {
+    setTimeout(() => {
+      if (pinMode === 'setup') {
+        pinSetupVal = pinBuf;
+        pinMode = 'confirm';
+        lockSub.textContent = '확인을 위해 한 번 더 입력하세요';
+        pinBuf = '';
+        updateDots();
+      } else if (pinMode === 'confirm') {
+        if (pinBuf === pinSetupVal) {
+          localStorage.setItem(PIN_KEY, hashPin(pinBuf));
+          toast('PIN 설정 완료!');
+          unlock();
+        } else {
+          updateDots(true);
+          lockSub.textContent = '일치하지 않습니다. 다시 설정하세요';
+          setTimeout(() => { pinMode='setup'; lockSub.textContent='새 PIN 4자리를 설정하세요'; pinBuf=''; updateDots(); },800);
+        }
       } else {
-        list.innerHTML = state.routines.map((r, i) =>
-          '<li class="task-item' + (checks[i] ? ' done' : '') + '" data-t="r" data-i="' + i + '">' +
-            '<div class="check"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>' +
-            '<span class="task-text">' + esc(r) + '</span>' +
-          '</li>'
-        ).join('');
+        if (hashPin(pinBuf) === localStorage.getItem(PIN_KEY)) {
+          unlock();
+        } else {
+          updateDots(true);
+          setTimeout(() => { pinBuf=''; updateDots(); },500);
+        }
       }
+    }, 150);
+  }
+}
 
-      const done = checks.filter(Boolean).length;
-      document.getElementById('routineCount').textContent = done + '/' + state.routines.length;
-    }
+document.getElementById('pinPad').addEventListener('click', e => {
+  const btn = e.target.closest('.pin-key');
+  if (btn) handlePin(btn.dataset.v);
+});
 
-    function renderTodos() {
-      const list = document.getElementById('todoList');
+function unlock() {
+  lockEl.classList.add('hidden');
+  document.getElementById('app').classList.add('show');
+  renderAll();
+}
 
-      if (state.todos.length === 0) {
-        list.innerHTML = '<div class="empty">할일이 없어요!<br>아래에서 새 할일을 추가하세요</div>';
-      } else {
-        list.innerHTML = state.todos.map((todo, i) =>
-          '<li class="task-item' + (todo.done ? ' done' : '') + '" data-t="d" data-i="' + i + '">' +
-            '<div class="check"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>' +
-            '<span class="task-text">' + esc(todo.text) + '</span>' +
-            '<button class="btn-delete" onclick="event.stopPropagation();delTodo(' + i + ')">&#10005;</button>' +
-          '</li>'
-        ).join('');
-      }
+// ==================== 탭 네비게이션 ====================
+const pages = { pageTodo:'할 일', pageDone:'해낸 일', pageArchive:'임시보관', pageContact:'연락처' };
+let currentPage = 'pageTodo';
 
-      const done = state.todos.filter(x => x.done).length;
-      document.getElementById('todoCount').textContent = done + '/' + state.todos.length;
-    }
+document.querySelector('.tab-bar').addEventListener('click', e => {
+  const btn = e.target.closest('.tab-btn');
+  if (!btn) return;
+  currentPage = btn.dataset.page;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b===btn));
+  document.querySelectorAll('.page').forEach(p => p.classList.toggle('active', p.id===currentPage));
+  document.getElementById('topTitle').textContent = pages[currentPage];
+  renderAll();
+});
 
-    function renderProgress() {
-      const checks = state.checks[t] || [];
-      const dr = checks.filter(Boolean).length;
-      const dt = state.todos.filter(x => x.done).length;
-      const total = state.routines.length + state.todos.length;
-      const done = dr + dt;
-      const pct = total === 0 ? 0 : Math.round((done / total) * 100);
-      document.getElementById('progressBar').style.width = pct + '%';
-      document.getElementById('progressPct').textContent = pct + '%';
+// ==================== FAB ====================
+document.getElementById('fab').addEventListener('click', () => {
+  if (currentPage === 'pageContact') openContactModal();
+  else openTaskModal();
+});
 
-      // 100% 달성 시 축하
-      if (pct === 100 && total > 0) {
-        showToast('오늘 할일 모두 완료! 수고했어요!');
-      }
-    }
+// ==================== 토스트 ====================
+let toastT;
+function toast(msg) {
+  const el=document.getElementById('toast'); el.textContent=msg; el.classList.add('show');
+  clearTimeout(toastT); toastT=setTimeout(()=>el.classList.remove('show'),1800);
+}
 
-    // ====== 이벤트 ======
+// ==================== 모달 공통 ====================
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-bg').forEach(m => {
+  m.addEventListener('click', e => { if(e.target===m) closeModal(m.id); });
+});
 
-    // 체크 토글
-    document.addEventListener('click', function(e) {
-      const item = e.target.closest('.task-item');
-      if (!item || e.target.closest('.btn-delete')) return;
+// ==================== 할일 CRUD ====================
+function openTaskModal(task) {
+  document.getElementById('modalTaskTitle').textContent = task ? '할일 수정' : '새 할일 추가';
+  document.getElementById('taskEditId').value = task ? task.id : '';
+  document.getElementById('fTitle').value = task ? task.title : '';
+  document.getElementById('fDate').value = task ? (task.date||'') : todayStr();
+  document.getElementById('fTime').value = task ? (task.time||'') : '';
+  document.getElementById('fUrgent').checked = task ? !!task.urgent : false;
+  document.getElementById('fDesc').value = task ? (task.desc||'') : '';
+  renderContactPicks(task ? (task.contactIds||[]) : []);
+  openModal('modalTask');
+  setTimeout(()=>document.getElementById('fTitle').focus(),300);
+}
 
-      const type = item.dataset.t;
-      const idx = parseInt(item.dataset.i);
+function renderContactPicks(selected) {
+  const el = document.getElementById('fContacts');
+  if (S.contacts.length === 0) { el.innerHTML='<span style="font-size:0.75rem;color:#555">연락처를 먼저 추가하세요</span>'; return; }
+  el.innerHTML = S.contacts.map(c =>
+    '<span class="contact-chip'+(selected.includes(c.id)?' selected':'')+'" data-id="'+c.id+'">'+esc(c.name)+'</span>'
+  ).join('');
+  el.querySelectorAll('.contact-chip').forEach(ch => {
+    ch.addEventListener('click', () => ch.classList.toggle('selected'));
+  });
+}
 
-      if (type === 'r') {
-        if (!state.checks[t]) state.checks[t] = new Array(state.routines.length).fill(false);
-        state.checks[t][idx] = !state.checks[t][idx];
-        if (state.checks[t][idx]) showToast('완료!');
-      } else if (type === 'd') {
-        state.todos[idx].done = !state.todos[idx].done;
-        if (state.todos[idx].done) showToast('완료!');
-      }
-      save();
-      render();
-    });
+document.getElementById('btnSaveTask').addEventListener('click', () => {
+  const title = document.getElementById('fTitle').value.trim();
+  if (!title) { toast('할 일을 입력하세요'); return; }
+  const editId = document.getElementById('taskEditId').value;
+  const date = document.getElementById('fDate').value || null;
+  const time = document.getElementById('fTime').value || null;
+  const urgent = document.getElementById('fUrgent').checked;
+  const desc = document.getElementById('fDesc').value.trim();
+  const cIds = Array.from(document.querySelectorAll('#fContacts .contact-chip.selected')).map(c=>Number(c.dataset.id));
 
-    // 할일 추가
-    document.getElementById('btnAdd').addEventListener('click', addTodo);
-    document.getElementById('todoInput').addEventListener('keydown', function(e) {
-      if (e.key === 'Enter') { e.preventDefault(); addTodo(); }
-    });
+  if (editId) {
+    const t = S.tasks.find(x=>x.id===Number(editId));
+    if (t) { Object.assign(t,{title,date,time,urgent,desc,contactIds:cIds}); }
+  } else {
+    S.tasks.push({id:Date.now(),title,date,time,urgent,desc,contactIds:cIds,status:'todo',createdAt:todayStr(),completedAt:null});
+  }
+  save(); closeModal('modalTask'); renderAll(); toast(editId?'수정됨':'추가됨');
+});
 
-    function addTodo() {
-      const input = document.getElementById('todoInput');
-      const text = input.value.trim();
-      if (!text) return;
-      state.todos.push({ id: Date.now(), text: text, done: false });
-      save();
-      input.value = '';
-      input.blur();
-      render();
-      showToast('할일 추가됨');
-    }
+// ==================== 할일 상세 ====================
+function openDetail(task) {
+  document.getElementById('detailTitle').textContent = task.title;
+  document.getElementById('detailBody').textContent = task.desc || '(상세 정보 없음)';
 
-    function delTodo(idx) {
-      const name = state.todos[idx].text;
-      if (confirm('"' + name + '" 삭제할까요?')) {
-        state.todos.splice(idx, 1);
-        save();
-        render();
-        showToast('삭제됨');
-      }
-    }
-
-    // ====== 루틴 관리 모달 ======
-    document.getElementById('btnManage').addEventListener('click', function() {
-      document.getElementById('modalBg').classList.add('open');
-      renderManageList();
-    });
-
-    document.getElementById('btnCloseModal').addEventListener('click', closeModal);
-    document.getElementById('modalBg').addEventListener('click', function(e) {
-      if (e.target === this) closeModal();
-    });
-
-    function closeModal() {
-      document.getElementById('modalBg').classList.remove('open');
-      render();
-    }
-
-    // 루틴 추가
-    document.getElementById('btnAddRoutine').addEventListener('click', addRoutine);
-    document.getElementById('routineInput').addEventListener('keydown', function(e) {
-      if (e.key === 'Enter') { e.preventDefault(); addRoutine(); }
-    });
-
-    function addRoutine() {
-      const input = document.getElementById('routineInput');
-      const text = input.value.trim();
-      if (!text) return;
-      state.routines.push(text);
-      if (!state.checks[t]) state.checks[t] = [];
-      state.checks[t].push(false);
-      save();
-      input.value = '';
-      renderManageList();
-      showToast('루틴 추가됨');
-    }
-
-    function renderManageList() {
-      const el = document.getElementById('routineManageList');
-      if (state.routines.length === 0) {
-        el.innerHTML = '<div class="empty">루틴이 없습니다. 위에서 추가해보세요!</div>';
-        return;
-      }
-      el.innerHTML = state.routines.map(function(r, i) {
-        return '<div class="routine-item">' +
-          '<span class="r-text">' + esc(r) + '</span>' +
-          '<button class="r-btn edit" onclick="editRoutine(' + i + ')">수정</button>' +
-          '<button class="r-btn" onclick="delRoutine(' + i + ')">삭제</button>' +
-        '</div>';
+  // 연락처
+  const cEl = document.getElementById('detailContacts');
+  if (task.contactIds && task.contactIds.length > 0) {
+    cEl.innerHTML = '<div style="font-size:0.75rem;color:var(--text2);margin-bottom:6px">관련 연락처</div>' +
+      task.contactIds.map(id => {
+        const c = S.contacts.find(x=>x.id===id);
+        if (!c) return '';
+        return '<div class="c-item" style="margin-bottom:4px;padding:8px 12px"><div class="c-name">'+esc(c.name)+'</div>' +
+          '<div class="c-detail"><span>'+esc(c.org||'')+'</span><span>'+esc(c.position||'')+'</span>' +
+          (c.phone?'<span><a href="tel:'+esc(c.phone)+'" style="color:var(--accent)">'+esc(c.phone)+'</a></span>':'') +
+          '</div></div>';
       }).join('');
-    }
+  } else { cEl.innerHTML = ''; }
 
-    window.editRoutine = function(idx) {
-      const cur = state.routines[idx];
-      const input = prompt('루틴 수정:', cur);
-      if (input !== null && input.trim()) {
-        state.routines[idx] = input.trim();
-        save();
-        renderManageList();
-        showToast('수정됨');
-      }
-    };
+  // 메타
+  const meta = [];
+  if (task.date) meta.push('날짜: '+dateLabel(task.date));
+  if (task.time) meta.push('시간: '+task.time);
+  if (task.urgent) meta.push('며칠 내 처리');
+  if (task.completedAt) meta.push('완료일: '+dateLabel(task.completedAt));
+  meta.push('등록일: '+dateLabel(task.createdAt));
+  document.getElementById('detailMeta').textContent = meta.join(' · ');
 
-    window.delRoutine = function(idx) {
-      if (confirm('"' + state.routines[idx] + '" 루틴을 삭제할까요?')) {
-        state.routines.splice(idx, 1);
-        if (state.checks[t]) state.checks[t].splice(idx, 1);
-        save();
-        renderManageList();
-        showToast('삭제됨');
-      }
-    };
+  // 액션 버튼
+  const acts = document.getElementById('detailActions');
+  acts.innerHTML = '';
+  if (task.status === 'todo') {
+    acts.innerHTML = '<button class="btn-done" onclick="markDone('+task.id+')">완료</button>' +
+      '<button class="btn-archive" onclick="markArchive('+task.id+')">보관</button>' +
+      '<button class="btn-edit" onclick="editTask('+task.id+')">수정</button>';
+  } else if (task.status === 'done') {
+    acts.innerHTML = '<button class="btn-restore" onclick="restoreTask('+task.id+')">할일로 복원</button>' +
+      '<button class="btn-danger" onclick="deleteTask('+task.id+')">삭제</button>';
+  } else if (task.status === 'archived') {
+    acts.innerHTML = '<button class="btn-restore" onclick="restoreTask('+task.id+')">할일로 복원</button>' +
+      '<button class="btn-danger" onclick="deleteTask('+task.id+')">삭제</button>';
+  }
+  openModal('modalDetail');
+}
 
-    // ====== 유틸 ======
-    function esc(s) {
-      const d = document.createElement('div');
-      d.textContent = s;
-      return d.innerHTML;
-    }
+window.markDone = function(id) {
+  const t=S.tasks.find(x=>x.id===id); if(t){t.status='done';t.completedAt=todayStr();} save(); closeModal('modalDetail'); renderAll(); toast('완료! 수고했어요');
+};
+window.markArchive = function(id) {
+  const t=S.tasks.find(x=>x.id===id); if(t){t.status='archived';t.archivedAt=todayStr();} save(); closeModal('modalDetail'); renderAll(); toast('임시보관으로 이동');
+};
+window.restoreTask = function(id) {
+  const t=S.tasks.find(x=>x.id===id); if(t){t.status='todo';t.completedAt=null;t.archivedAt=null;} save(); closeModal('modalDetail'); renderAll(); toast('할일로 복원');
+};
+window.deleteTask = function(id) {
+  if(!confirm('정말 삭제할까요?'))return;
+  S.tasks=S.tasks.filter(x=>x.id!==id); save(); closeModal('modalDetail'); renderAll(); toast('삭제됨');
+};
+window.editTask = function(id) {
+  closeModal('modalDetail');
+  const t=S.tasks.find(x=>x.id===id); if(t) setTimeout(()=>openTaskModal(t),200);
+};
 
-    // 날짜 변경 자동 감지 (1분마다)
-    setInterval(function() {
-      const now = today();
-      if (state.lastDate !== now) {
-        location.reload();
-      }
-    }, 60000);
+// ==================== 연락처 CRUD ====================
+function openContactModal(contact) {
+  document.getElementById('modalContactTitle').textContent = contact ? '연락처 수정' : '연락처 추가';
+  document.getElementById('contactEditId').value = contact ? contact.id : '';
+  document.getElementById('cName').value = contact ? contact.name : '';
+  document.getElementById('cOrg').value = contact ? (contact.org||'') : '';
+  document.getElementById('cPos').value = contact ? (contact.position||'') : '';
+  document.getElementById('cPhone').value = contact ? (contact.phone||'') : '';
+  document.getElementById('cEmail').value = contact ? (contact.email||'') : '';
+  document.getElementById('cMemo').value = contact ? (contact.memo||'') : '';
+  openModal('modalContact');
+  setTimeout(()=>document.getElementById('cName').focus(),300);
+}
 
-    // ====== PWA 서비스 워커 등록 ======
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('./sw.js').catch(function() {});
-    }
+document.getElementById('btnSaveContact').addEventListener('click', () => {
+  const name = document.getElementById('cName').value.trim();
+  if (!name) { toast('이름을 입력하세요'); return; }
+  const editId = document.getElementById('contactEditId').value;
+  const data = {
+    name, org:document.getElementById('cOrg').value.trim(),
+    position:document.getElementById('cPos').value.trim(),
+    phone:document.getElementById('cPhone').value.trim(),
+    email:document.getElementById('cEmail').value.trim(),
+    memo:document.getElementById('cMemo').value.trim(),
+  };
+  if (editId) {
+    const c=S.contacts.find(x=>x.id===Number(editId));
+    if(c) Object.assign(c,data);
+  } else {
+    S.contacts.push({id:Date.now(),...data});
+  }
+  save(); closeModal('modalContact'); renderAll(); toast(editId?'수정됨':'추가됨');
+});
 
-    // 초기 렌더링
-    render();
-  </script>
+// ==================== 메모 ====================
+document.getElementById('btnAddMemo').addEventListener('click', () => {
+  const input = document.getElementById('memoInput');
+  const text = input.value.trim();
+  if (!text) return;
+  S.memos.unshift({id:Date.now(),content:text,createdAt:todayStr()});
+  save(); input.value=''; renderMemos(); toast('메모 저장');
+});
+
+// ==================== 루틴 관리 ====================
+document.getElementById('btnManageRoutine').addEventListener('click', () => { openModal('modalRoutine'); renderRoutineManage(); });
+document.getElementById('btnAddRoutine').addEventListener('click', addRoutine);
+document.getElementById('newRoutineInput').addEventListener('keydown', e => { if(e.key==='Enter'){e.preventDefault();addRoutine();} });
+
+function addRoutine() {
+  const input=document.getElementById('newRoutineInput'); const text=input.value.trim();
+  if(!text)return; S.routines.push(text); if(!S.rChecks[td])S.rChecks[td]=[];
+  S.rChecks[td].push(false); save(); input.value=''; renderRoutineManage(); toast('루틴 추가');
+}
+window.delRoutine = function(i) {
+  if(!confirm('"'+S.routines[i]+'" 삭제?'))return;
+  S.routines.splice(i,1); if(S.rChecks[td])S.rChecks[td].splice(i,1); save(); renderRoutineManage();
+};
+window.editRoutineItem = function(i) {
+  const v=prompt('루틴 수정:',S.routines[i]);
+  if(v&&v.trim()){S.routines[i]=v.trim();save();renderRoutineManage();}
+};
+
+function renderRoutineManage() {
+  document.getElementById('routineManageList').innerHTML = S.routines.length===0 ?
+    '<div class="empty">루틴이 없습니다</div>' :
+    S.routines.map((r,i) =>
+      '<div style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--bg);border-radius:8px;margin-bottom:5px">' +
+      '<span style="flex:1;font-size:0.88rem">'+esc(r)+'</span>' +
+      '<button class="t-btn" onclick="editRoutineItem('+i+')">수정</button>' +
+      '<button class="t-btn" onclick="delRoutine('+i+')" style="color:var(--danger)">삭제</button></div>'
+    ).join('');
+}
+
+// ==================== 달력 ====================
+let calYear, calMonth;
+function initCal() { const d=new Date(); calYear=d.getFullYear(); calMonth=d.getMonth(); }
+initCal();
+
+function renderCalendar(containerId, taskFilter) {
+  const el = document.getElementById(containerId);
+  const first = new Date(calYear, calMonth, 1);
+  const last = new Date(calYear, calMonth+1, 0);
+  const startDay = first.getDay();
+  const daysInMonth = last.getDate();
+
+  // 해당 월 할일 날짜 수집
+  const taskDates = new Set();
+  S.tasks.filter(taskFilter).forEach(t => {
+    if(t.date && t.date.startsWith(calYear+'-'+String(calMonth+1).padStart(2,'0'))) taskDates.add(parseInt(t.date.split('-')[2]));
+  });
+
+  let html = '<div class="cal-head">' +
+    '<button class="cal-nav" onclick="calNav(-1,\''+containerId+'\','+taskFilter.toString().includes('done')+')">◂</button>' +
+    '<span class="cal-title">'+calYear+'년 '+(calMonth+1)+'월</span>' +
+    '<button class="cal-nav" onclick="calNav(1,\''+containerId+'\','+taskFilter.toString().includes('done')+')">▸</button></div>';
+  html += '<div class="cal-grid">';
+  ['일','월','화','수','목','금','토'].forEach(d => html+='<div class="cal-day-name">'+d+'</div>');
+  for(let i=0;i<startDay;i++) html+='<div class="cal-day other"></div>';
+  const todayD = new Date();
+  for(let d=1;d<=daysInMonth;d++) {
+    const isToday = calYear===todayD.getFullYear() && calMonth===todayD.getMonth() && d===todayD.getDate();
+    const hasTask = taskDates.has(d);
+    const dateStr = calYear+'-'+String(calMonth+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+    html += '<div class="cal-day'+(isToday?' today':'')+(hasTask?' has-task':'')+'" onclick="calDayClick(\''+dateStr+'\')">'+d+'</div>';
+  }
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+window.calNav = function(dir, containerId, isDone) {
+  calMonth += dir;
+  if(calMonth<0){calMonth=11;calYear--;}
+  if(calMonth>11){calMonth=0;calYear++;}
+  renderCalendar(containerId, isDone ? (t=>t.status==='done') : (t=>t.status==='todo'));
+};
+window.calDayClick = function(dateStr) {
+  if(currentPage==='pageTodo') {
+    const t={date:dateStr}; openTaskModal(); document.getElementById('fDate').value=dateStr;
+  }
+};
+
+// ==================== 엑셀 다운로드 ====================
+document.getElementById('btnExcel').addEventListener('click', () => {
+  const doneTasks = S.tasks.filter(t=>t.status==='done');
+  if(doneTasks.length===0){toast('해낸 일이 없습니다');return;}
+  const BOM = '\uFEFF';
+  let csv = BOM + '완료일,할일,상세정보,등록일\n';
+  doneTasks.forEach(t => {
+    csv += '"'+(t.completedAt||'')+'",' +
+      '"'+t.title.replace(/"/g,'""')+'",' +
+      '"'+(t.desc||'').replace(/"/g,'""')+'",' +
+      '"'+(t.createdAt||'')+'"\n';
+  });
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = '해낸일_'+todayStr()+'.csv';
+  a.click();
+  toast('다운로드 완료');
+});
+
+// ==================== 잠금 버튼 ====================
+document.getElementById('btnLogout').addEventListener('click', () => {
+  document.getElementById('app').classList.remove('show');
+  lockEl.classList.remove('hidden');
+  pinBuf=''; updateDots(); pinMode='login'; lockSub.textContent='PIN 4자리를 입력하세요';
+});
+
+// ==================== 검색 ====================
+let searchTodo='', searchDone='', searchContact='';
+document.getElementById('searchTodo').addEventListener('input', e => { searchTodo=e.target.value.toLowerCase(); renderTodoPage(); });
+document.getElementById('searchDone').addEventListener('input', e => { searchDone=e.target.value.toLowerCase(); renderDonePage(); });
+document.getElementById('searchContact').addEventListener('input', e => { searchContact=e.target.value.toLowerCase(); renderContactPage(); });
+
+// ==================== 렌더링 ====================
+function renderAll() {
+  renderTopDate();
+  renderTodoPage();
+  renderDonePage();
+  renderArchivePage();
+  renderContactPage();
+}
+
+function renderTopDate() {
+  const d=new Date();
+  const days=['일','월','화','수','목','금','토'];
+  document.getElementById('topDate').textContent=d.getFullYear()+'년 '+(d.getMonth()+1)+'월 '+d.getDate()+'일 ('+days[d.getDay()]+')';
+}
+
+function renderTodoPage() {
+  const todos = S.tasks.filter(t=>t.status==='todo');
+  const q = searchTodo;
+  const filtered = q ? todos.filter(t=>t.title.toLowerCase().includes(q)||(t.desc||'').toLowerCase().includes(q)) : todos;
+
+  // 분류: 오늘 / 긴급(미정) / 예정
+  const todayTasks=[], urgentTasks=[], futureTasks=[];
+  filtered.forEach(t => {
+    if(t.date === td) todayTasks.push(t);
+    else if(!t.date && t.urgent) urgentTasks.push(t);
+    else if(!t.date && !t.urgent) urgentTasks.push(t); // 날짜없는것도 여기
+    else if(t.date > td) futureTasks.push(t);
+    else todayTasks.push(t); // 과거일자는 오늘로 표시
+  });
+
+  // 정렬
+  const sortByTime = (a,b) => (a.time||'99:99').localeCompare(b.time||'99:99');
+  todayTasks.sort(sortByTime);
+  futureTasks.sort((a,b) => (a.date||'').localeCompare(b.date||'') || sortByTime(a,b));
+
+  document.getElementById('todayList').innerHTML = todayTasks.length ? todayTasks.map(t=>taskHtml(t,'today')).join('') : '<div class="empty">오늘 할 일이 없습니다</div>';
+  document.getElementById('todayCount').textContent = todayTasks.length;
+
+  document.getElementById('urgentList').innerHTML = urgentTasks.length ? urgentTasks.map(t=>taskHtml(t,'urgent')).join('') : '<div class="empty">없음</div>';
+  document.getElementById('urgentCount').textContent = urgentTasks.length;
+  document.getElementById('secUrgent').style.display = urgentTasks.length ? '' : 'none';
+
+  document.getElementById('futureList').innerHTML = futureTasks.length ? futureTasks.map(t=>taskHtml(t,'future')).join('') : '<div class="empty">없음</div>';
+  document.getElementById('futureCount').textContent = futureTasks.length;
+  document.getElementById('secFuture').style.display = futureTasks.length ? '' : 'none';
+
+  // 루틴
+  renderRoutines();
+  // 달력
+  renderCalendar('calTodo', t=>t.status==='todo');
+  // 메모
+  renderMemos();
+}
+
+function taskHtml(t, tag) {
+  const meta = [];
+  if(t.date) meta.push(dateLabel(t.date));
+  if(t.time) meta.push(t.time);
+  return '<div class="t-item" onclick="openDetail(window._tasks['+t.id+'])" data-id="'+t.id+'">' +
+    '<div class="t-top">' +
+    '<div class="t-check" onclick="event.stopPropagation();quickDone('+t.id+')">' +
+    '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>' +
+    '<div class="t-info"><div class="t-title">'+esc(t.title)+'</div>' +
+    '<div class="t-meta">'+
+    (tag?'<span class="t-tag '+tag+'">'+(tag==='today'?'오늘':tag==='urgent'?'며칠 내':dateLabel(t.date))+'</span>':'')+
+    (meta.length?'<span>'+meta.join(' · ')+'</span>':'')+
+    '</div></div>' +
+    '<div class="t-actions"><button class="t-btn" onclick="event.stopPropagation();quickArchive('+t.id+')" title="보관">📦</button></div>' +
+    '</div></div>';
+}
+
+// 전역 태스크 맵 (onclick에서 접근용)
+window._tasks = {};
+function updateTaskMap() { S.tasks.forEach(t=>{window._tasks[t.id]=t;}); }
+window.openDetail = openDetail;
+
+window.quickDone = function(id) {
+  const t=S.tasks.find(x=>x.id===id); if(t){t.status='done';t.completedAt=todayStr();} save(); renderAll(); toast('완료!');
+};
+window.quickArchive = function(id) {
+  const t=S.tasks.find(x=>x.id===id); if(t){t.status='archived';t.archivedAt=todayStr();} save(); renderAll(); toast('보관됨');
+};
+
+function renderRoutines() {
+  const checks = S.rChecks[td]||[];
+  const list = document.getElementById('routineList');
+  list.innerHTML = S.routines.length===0 ? '<div class="empty">루틴이 없어요. 관리에서 추가하세요</div>' :
+    S.routines.map((r,i) =>
+      '<div class="routine-item'+(checks[i]?' done':'')+'" onclick="toggleRoutine('+i+')">' +
+      '<div class="t-check'+(checks[i]?' checked':'')+'"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>' +
+      '<span class="r-text">'+esc(r)+'</span></div>'
+    ).join('');
+  const done=checks.filter(Boolean).length;
+  document.getElementById('routineCount').textContent=done+'/'+S.routines.length;
+}
+
+window.toggleRoutine = function(i) {
+  if(!S.rChecks[td]) S.rChecks[td]=new Array(S.routines.length).fill(false);
+  S.rChecks[td][i]=!S.rChecks[td][i]; save(); renderRoutines();
+  if(S.rChecks[td][i]) toast('완료!');
+};
+
+function renderMemos() {
+  document.getElementById('memoList').innerHTML = S.memos.length===0?'':
+    S.memos.map((m,i) =>
+      '<div class="memo-item"><span class="m-text">'+esc(m.content)+'</span>' +
+      '<span class="m-date">'+dateLabel(m.createdAt)+'</span>' +
+      '<button class="m-del" onclick="delMemo('+i+')">✕</button></div>'
+    ).join('');
+}
+window.delMemo = function(i) { S.memos.splice(i,1); save(); renderMemos(); };
+
+function renderDonePage() {
+  const done = S.tasks.filter(t=>t.status==='done');
+  const q = searchDone;
+  const filtered = q ? done.filter(t=>t.title.toLowerCase().includes(q)) : done;
+  filtered.sort((a,b)=>(b.completedAt||'').localeCompare(a.completedAt||''));
+
+  document.getElementById('doneCount').textContent=filtered.length;
+  document.getElementById('doneList').innerHTML = filtered.length===0 ?
+    '<div class="empty">아직 해낸 일이 없어요<br>할일을 완료하면 여기에 기록됩니다</div>' :
+    filtered.map(t =>
+      '<div class="t-item" onclick="openDetail(window._tasks['+t.id+'])">' +
+      '<div class="t-top"><div class="t-check checked"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>' +
+      '<div class="t-info"><div class="t-title" style="text-decoration:line-through;color:var(--text2)">'+esc(t.title)+'</div>' +
+      '<div class="t-meta"><span>완료: '+dateLabel(t.completedAt)+'</span></div></div></div></div>'
+    ).join('');
+  renderCalendar('calDone', t=>t.status==='done');
+}
+
+function renderArchivePage() {
+  const archived = S.tasks.filter(t=>t.status==='archived');
+  document.getElementById('archiveCount').textContent=archived.length;
+  document.getElementById('archiveList').innerHTML = archived.length===0 ?
+    '<div class="empty">보관된 항목이 없습니다<br>당장 할 필요 없는 일은 여기에 보관됩니다</div>' :
+    archived.map(t =>
+      '<div class="t-item" onclick="openDetail(window._tasks['+t.id+'])">' +
+      '<div class="t-top"><div class="t-info"><div class="t-title">'+esc(t.title)+'</div>' +
+      '<div class="t-meta"><span>보관일: '+dateLabel(t.archivedAt||t.createdAt)+'</span></div></div>' +
+      '<button class="t-btn" onclick="event.stopPropagation();restoreTask('+t.id+')" style="color:var(--accent)">복원</button>' +
+      '</div></div>'
+    ).join('');
+}
+
+function renderContactPage() {
+  const q = searchContact;
+  const filtered = q ? S.contacts.filter(c=>c.name.toLowerCase().includes(q)||(c.org||'').toLowerCase().includes(q)) : S.contacts;
+  document.getElementById('contactList').innerHTML = filtered.length===0 ?
+    '<div class="empty">연락처가 없습니다<br>+ 버튼으로 추가하세요</div>' :
+    filtered.map(c =>
+      '<div class="c-item" onclick="openContactEdit('+c.id+')">' +
+      '<div class="c-name">'+esc(c.name)+'</div>' +
+      '<div class="c-detail">' +
+      (c.org?'<span>'+esc(c.org)+'</span>':'') +
+      (c.position?'<span>'+esc(c.position)+'</span>':'') +
+      (c.phone?'<span>'+esc(c.phone)+'</span>':'') +
+      '</div></div>'
+    ).join('');
+}
+
+window.openContactEdit = function(id) {
+  const c=S.contacts.find(x=>x.id===id);
+  if(c) openContactModal(c);
+};
+
+function esc(s) { const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
+
+// 날짜 변경 자동 감지
+setInterval(()=>{ if(S.lastDate!==todayStr()) location.reload(); },60000);
+
+// PWA
+if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{});
+
+// 초기화
+updateTaskMap();
+initLock();
+
+// 데이터 변경 시 태스크맵 업데이트
+const origSave = save;
+window.save = function() { origSave(); updateTaskMap(); };
+// save 재할당 반영
+</script>
 </body>
 </html>
