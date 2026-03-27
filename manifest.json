@@ -1,7 +1,7 @@
 {
-  "name": "데일리 루틴 & 할일",
-  "short_name": "Daily Todo",
-  "description": "매일 고정 루틴 자동 리셋 + 할일 관리 앱",
+  "name": "수정's TODO",
+  "short_name": "수정's TODO",
+  "description": "수정이의 생활관리 맞춤 앱",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0f0f1a",
