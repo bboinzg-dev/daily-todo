@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>수정's TODO 사용설명서</title>
+  <style>
+    @page { margin: 20mm 18mm; size: A4; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; color: #222; line-height: 1.7; font-size: 11pt; background: #fff; }
+
+    .cover { page-break-after: always; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 90vh; text-align: center; }
+    .cover-icon { font-size: 4rem; margin-bottom: 20px; }
+    .cover h1 { font-size: 2.2rem; font-weight: 800; color: #2c2c54; margin-bottom: 8px; }
+    .cover .subtitle { font-size: 1.1rem; color: #666; margin-bottom: 40px; }
+    .cover .info { font-size: 0.9rem; color: #999; }
+
+    .toc { page-break-after: always; padding-top: 40px; }
+    .toc h2 { font-size: 1.4rem; color: #2c2c54; border-bottom: 2px solid #2c2c54; padding-bottom: 8px; margin-bottom: 20px; }
+    .toc-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dotted #ddd; font-size: 1rem; }
+    .toc-item span:first-child { font-weight: 600; }
+
+    h2 { font-size: 1.3rem; color: #2c2c54; margin: 30px 0 12px; padding-bottom: 6px; border-bottom: 2px solid #e8e8f0; }
+    h3 { font-size: 1.05rem; color: #474787; margin: 20px 0 8px; }
+    p { margin: 6px 0; }
+    ul, ol { margin: 8px 0 8px 20px; }
+    li { margin: 4px 0; }
+
+    .step-box { background: #f5f5fa; border-radius: 10px; padding: 16px 18px; margin: 12px 0; }
+    .step-box h4 { color: #2c2c54; font-size: 0.95rem; margin-bottom: 8px; }
+    .step-box ol { margin-left: 18px; }
+    .step-box li { margin: 6px 0; }
+
+    .feature { background: #fafafa; border-left: 4px solid #7b8aee; padding: 12px 16px; margin: 12px 0; border-radius: 0 8px 8px 0; }
+    .feature h4 { color: #474787; margin-bottom: 4px; font-size: 0.95rem; }
+
+    .tip { background: #fff8e6; border-left: 4px solid #f0a030; padding: 10px 14px; margin: 12px 0; border-radius: 0 8px 8px 0; font-size: 0.92rem; }
+    .tip::before { content: "💡 "; }
+
+    .warn { background: #fef0f0; border-left: 4px solid #e05050; padding: 10px 14px; margin: 12px 0; border-radius: 0 8px 8px 0; font-size: 0.92rem; }
+    .warn::before { content: "⚠️ "; }
+
+    table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 0.92rem; }
+    th, td { border: 1px solid #ddd; padding: 8px 10px; text-align: left; }
+    th { background: #f0f0f8; color: #2c2c54; font-weight: 600; }
+
+    .icon-desc { display: flex; align-items: center; gap: 10px; padding: 6px 0; }
+    .icon-desc .icon { font-size: 1.3rem; width: 30px; text-align: center; }
+
+    .page-break { page-break-before: always; }
+
+    .footer { text-align: center; margin-top: 40px; padding-top: 16px; border-top: 1px solid #ddd; font-size: 0.8rem; color: #999; }
+
+    @media print {
+      body { font-size: 10pt; }
+      .no-print { display: none; }
+    }
+
+    .print-btn { position: fixed; top: 20px; right: 20px; background: #2c2c54; color: #fff; border: none; padding: 12px 24px; border-radius: 10px; font-size: 1rem; cursor: pointer; z-index: 100; }
+    .print-btn:hover { background: #474787; }
+
+    .container { max-width: 700px; margin: 0 auto; padding: 20px; }
+  </style>
+</head>
+<body>
+
+<button class="print-btn no-print" onclick="window.print()">📄 PDF 저장 / 인쇄</button>
+
+<div class="container">
+
+<!-- ===== 표지 ===== -->
+<div class="cover">
+  <div class="cover-icon">✅</div>
+  <h1>수정's TODO</h1>
+  <div class="subtitle">생활관리 맞춤 앱 사용설명서</div>
+  <div class="info">
+    버전 6.0<br>
+    2026년 3월<br><br>
+    https://bboinzg-dev.github.io/daily-todo/
+  </div>
+</div>
+
+<!-- ===== 목차 ===== -->
+<div class="toc">
+  <h2>목차</h2>
+  <div class="toc-item"><span>1. 설치 방법</span><span></span></div>
+  <div class="toc-item"><span>2. 시작하기 (PIN 설정)</span><span></span></div>
+  <div class="toc-item"><span>3. 화면 구성</span><span></span></div>
+  <div class="toc-item"><span>4. 오늘 탭</span><span></span></div>
+  <div class="toc-item"><span>&nbsp;&nbsp;&nbsp;4-1. 컨디션 체크</span><span></span></div>
+  <div class="toc-item"><span>&nbsp;&nbsp;&nbsp;4-2. 대시보드</span><span></span></div>
+  <div class="toc-item"><span>&nbsp;&nbsp;&nbsp;4-3. 뽀모도로 타이머</span><span></span></div>
+  <div class="toc-item"><span>&nbsp;&nbsp;&nbsp;4-4. 물 마시기</span><span></span></div>
+  <div class="toc-item"><span>&nbsp;&nbsp;&nbsp;4-5. 습관 트래커</span><span></span></div>
+  <div class="toc-item"><span>&nbsp;&nbsp;&nbsp;4-6. 고정 루틴</span><span></span></div>
+  <div class="toc-item"><span>&nbsp;&nbsp;&nbsp;4-7. 할 일 목록</span><span></span></div>
+  <div class="toc-item"><span>&nbsp;&nbsp;&nbsp;4-8. D-day</span><span></span></div>
+  <div class="toc-item"><span>5. 할일 탭</span><span></span></div>
+  <div class="toc-item"><span>&nbsp;&nbsp;&nbsp;5-1. 주간 보기</span><span></span></div>
+  <div class="toc-item"><span>&nbsp;&nbsp;&nbsp;5-2. 달력</span><span></span></div>
+  <div class="toc-item"><span>&nbsp;&nbsp;&nbsp;5-3. 빠른 메모</span><span></span></div>
+  <div class="toc-item"><span>6. 기록 탭</span><span></span></div>
+  <div class="toc-item"><span>7. 설정 탭</span><span></span></div>
+  <div class="toc-item"><span>8. 할일 등록/관리</span><span></span></div>
+  <div class="toc-item"><span>9. 알림 설정</span><span></span></div>
+  <div class="toc-item"><span>10. 데이터 백업 및 복원</span><span></span></div>
+  <div class="toc-item"><span>11. 자주 묻는 질문 (FAQ)</span><span></span></div>
+</div>
+
+<!-- ===== 1. 설치 ===== -->
+<h2>1. 설치 방법</h2>
+<p>이 앱은 웹 기반(PWA)이라 앱스토어 없이 바로 설치됩니다.</p>
+
+<div class="step-box">
+  <h4>아이폰 (Safari)</h4>
+  <ol>
+    <li><strong>Safari</strong>에서 아래 주소 접속<br>https://bboinzg-dev.github.io/daily-todo/</li>
+    <li>하단 <strong>공유 버튼</strong> (□↑ 모양) 터치</li>
+    <li>메뉴를 아래로 스크롤 → <strong>"홈 화면에 추가"</strong> 터치</li>
+    <li>이름 확인 후 <strong>"추가"</strong> 터치</li>
+    <li>홈 화면에 앱 아이콘 생성!</li>
+  </ol>
+</div>
+
+<div class="step-box">
+  <h4>안드로이드 (Chrome)</h4>
+  <ol>
+    <li><strong>Chrome</strong>에서 아래 주소 접속<br>https://bboinzg-dev.github.io/daily-todo/</li>
+    <li>우측 상단 <strong>⋮ 메뉴</strong> 터치</li>
+    <li><strong>"홈 화면에 추가"</strong> 또는 <strong>"앱 설치"</strong> 터치</li>
+    <li><strong>"설치"</strong> 확인</li>
+    <li>홈 화면에 앱 아이콘 생성!</li>
+  </ol>
+</div>
+
+<div class="tip">설치 후에는 주소창 없이 전체화면 앱처럼 실행됩니다.</div>
+
+<!-- ===== 2. PIN ===== -->
+<h2>2. 시작하기 (PIN 설정)</h2>
+<p>첫 실행 시 <strong>4자리 PIN 번호</strong>를 설정합니다.</p>
+<ol>
+  <li>원하는 4자리 숫자 입력</li>
+  <li>확인을 위해 한 번 더 입력</li>
+  <li>설정 완료! 이후 앱을 열 때마다 PIN을 입력해야 합니다.</li>
+</ol>
+
+<div class="warn">PIN을 잊어버리면 "초기화" 버튼으로 리셋할 수 있지만, <strong>모든 데이터가 삭제</strong>됩니다. 반드시 백업해두세요.</div>
+
+<!-- ===== 3. 화면 구성 ===== -->
+<h2>3. 화면 구성</h2>
+<p>하단에 4개의 탭이 있습니다.</p>
+<table>
+  <tr><th>탭</th><th>아이콘</th><th>기능</th></tr>
+  <tr><td><strong>오늘</strong></td><td>⏰</td><td>대시보드, 습관, 루틴, 오늘 할일, 뽀모도로, 물마시기</td></tr>
+  <tr><td><strong>할일</strong></td><td>✅</td><td>전체 할일 목록, 주간 보기, 달력, 빠른 메모</td></tr>
+  <tr><td><strong>기록</strong></td><td>✓</td><td>해낸 일, 통계, 컨디션 기록, 엑셀 다운로드</td></tr>
+  <tr><td><strong>설정</strong></td><td>⚙️</td><td>임시보관, 알림, 눈 쉬기, 자동 잠금, 백업/복원</td></tr>
+</table>
+
+<p>우측 하단의 <strong>+ 버튼</strong>(FAB)을 누르면 새 할일을 추가할 수 있습니다.</p>
+
+<!-- ===== 4. 오늘 탭 ===== -->
+<h2 class="page-break">4. 오늘 탭</h2>
+<p>앱을 열면 가장 먼저 보이는 메인 화면입니다. 오늘 해야 할 모든 것을 한눈에 확인합니다.</p>
+
+<h3>4-1. 컨디션 체크</h3>
+<p>화면 상단에 오늘의 기분을 이모지로 기록합니다.</p>
+<table>
+  <tr><th>이모지</th><th>의미</th></tr>
+  <tr><td>😊</td><td>좋음</td></tr>
+  <tr><td>🙂</td><td>보통</td></tr>
+  <tr><td>😐</td><td>그저그럼</td></tr>
+  <tr><td>😔</td><td>별로</td></tr>
+  <tr><td>😫</td><td>힘듦</td></tr>
+</table>
+<p>기록 탭에서 최근 7일간의 컨디션 추이를 확인할 수 있습니다.</p>
+
+<h3>4-2. 대시보드</h3>
+<p>4개의 카드가 오늘의 현황을 요약합니다.</p>
+<table>
+  <tr><th>카드</th><th>내용</th></tr>
+  <tr><td>할 일</td><td>오늘 남은 할일 수</td></tr>
+  <tr><td>완료</td><td>오늘 완료한 할일 수</td></tr>
+  <tr><td>습관</td><td>오늘 습관 달성률 (%)</td></tr>
+  <tr><td>D-day</td><td>가장 가까운 D-day까지 남은 일수</td></tr>
+</table>
+
+<h3>4-3. 뽀모도로 타이머</h3>
+<p>집중력을 높이기 위한 시간 관리 도구입니다.</p>
+<div class="feature">
+  <h4>사용법</h4>
+  <ol>
+    <li><strong>"시작"</strong> 버튼 → 25분 집중 타이머 시작</li>
+    <li>25분 완료 시 알림 → 자동으로 5분 휴식 시작</li>
+    <li>5분 휴식 완료 시 알림 → 1라운드 완료</li>
+    <li>반복! 오늘 몇 회 집중했는지 카운트됩니다.</li>
+  </ol>
+</div>
+<div class="tip">"일시정지" 버튼으로 중단할 수 있고, "리셋"으로 초기화됩니다.</div>
+
+<h3>4-4. 물 마시기</h3>
+<p>하루 목표 8잔의 물 섭취를 추적합니다.</p>
+<ul>
+  <li>💧 아이콘을 터치하면 마신 잔 수가 카운트됩니다.</li>
+  <li>이미 채워진 잔을 터치하면 취소됩니다.</li>
+  <li><strong>알림 주기</strong>를 설정하면 정해진 시간마다 물 마시기 알림이 옵니다.</li>
+</ul>
+<table>
+  <tr><th>알림 주기</th><th>설명</th></tr>
+  <tr><td>끄기</td><td>알림 없음</td></tr>
+  <tr><td>30분</td><td>30분마다 알림</td></tr>
+  <tr><td>1시간</td><td>1시간마다 알림 (기본값)</td></tr>
+  <tr><td>1.5시간 / 2시간</td><td>여유롭게 알림</td></tr>
+</table>
+
+<h3 class="page-break">4-5. 습관 트래커</h3>
+<p>매일 반복할 습관을 등록하고 체크합니다. 매일 자동 리셋됩니다.</p>
+<ul>
+  <li>터치하면 완료 체크 / 다시 터치하면 취소</li>
+  <li>연속으로 달성하면 🔥 <strong>연속 달성</strong> 배지가 표시됩니다.</li>
+  <li><strong>"관리"</strong> 버튼으로 습관 추가/삭제 가능</li>
+</ul>
+<div class="feature">
+  <h4>습관 추가 시 설정 항목</h4>
+  <ul>
+    <li><strong>이름</strong>: 습관 이름 (예: 스트레칭)</li>
+    <li><strong>이모지</strong>: 아이콘 (예: 🧘)</li>
+    <li><strong>알림</strong>: 주기적 알림 (30분/1시간/2시간마다)</li>
+  </ul>
+</div>
+
+<h3>4-6. 고정 루틴</h3>
+<p>매일 고정으로 하는 일과를 관리합니다. 습관과 비슷하지만, 보다 구체적인 일과 항목입니다.</p>
+<ul>
+  <li>매일 자동으로 리셋됩니다.</li>
+  <li><strong>"관리"</strong> 버튼으로 추가/수정/삭제 가능</li>
+</ul>
+<div class="tip">기본 루틴: 기상 후 물 한 잔, 스트레칭 10분, 오늘 할일 정리, 운동 30분, 독서 20분, 하루 회고 작성</div>
+
+<h3>4-7. 할 일 목록</h3>
+<p>오늘 해야 할 일과 며칠 내 해야 할 일이 표시됩니다.</p>
+<ul>
+  <li><strong>왼쪽 체크박스</strong> 터치 → 바로 완료 처리</li>
+  <li><strong>항목 자체</strong>를 터치 → 상세 정보 확인</li>
+  <li>상세 화면에서 <strong>완료 / 보관 / 수정</strong> 가능</li>
+</ul>
+
+<h3>4-8. D-day</h3>
+<p>중요한 일정의 카운트다운을 표시합니다.</p>
+<ul>
+  <li><strong>"추가"</strong> 버튼으로 D-day 등록</li>
+  <li>D-day 당일: <strong>D-DAY</strong>, 지난 후: <strong>D+N</strong>, 남은 날: <strong>D-N</strong></li>
+  <li>대시보드에 가장 가까운 D-day가 표시됩니다.</li>
+</ul>
+
+<!-- ===== 5. 할일 탭 ===== -->
+<h2 class="page-break">5. 할일 탭</h2>
+<p>모든 할일을 한곳에서 관리하고, 주간/월간 일정을 확인합니다.</p>
+
+<h3>5-1. 주간 보기</h3>
+<p>이번 주(월~일) 요일별 할일 현황을 한눈에 볼 수 있습니다.</p>
+<ul>
+  <li>각 요일에 할일 수와 완료 수가 표시됩니다.</li>
+  <li>카테고리별 색상 점으로 어떤 종류의 일이 있는지 파악 가능</li>
+  <li>오늘 날짜는 테두리로 강조됩니다.</li>
+</ul>
+
+<h3>5-2. 달력</h3>
+<p>월간 달력에서 할일이 있는 날에 점(●)이 표시됩니다.</p>
+<ul>
+  <li>◂ ▸ 버튼으로 월 이동</li>
+  <li><strong>날짜를 터치</strong>하면 해당 날짜에 바로 할일을 추가할 수 있습니다.</li>
+</ul>
+
+<h3>5-3. 빠른 메모</h3>
+<p>할일과 관련 없지만 급하게 적어야 할 내용을 기록합니다.</p>
+<ul>
+  <li>내용 입력 후 <strong>"저장"</strong> 버튼 터치</li>
+  <li>저장된 메모는 아래에 목록으로 표시</li>
+  <li>✕ 버튼으로 삭제</li>
+</ul>
+
+<!-- ===== 6. 기록 탭 ===== -->
+<h2>6. 기록 탭</h2>
+<p>완료한 일의 기록과 통계를 확인합니다.</p>
+
+<div class="feature">
+  <h4>엑셀 다운로드</h4>
+  <p>상단의 <strong>"해낸 일 엑셀 다운로드"</strong> 버튼을 누르면 완료일, 카테고리, 할일 이름, 상세 정보, 등록일이 포함된 CSV 파일이 다운로드됩니다. 엑셀에서 열 수 있습니다.</p>
+</div>
+
+<h3>이번 주 완료율</h3>
+<p>요일별로 할일 완료율을 막대 그래프로 보여줍니다.</p>
+
+<h3>습관 연속 달성</h3>
+<p>각 습관의 연속 달성 일수를 🔥와 함께 표시합니다.</p>
+
+<h3>컨디션 기록</h3>
+<p>최근 7일간 기록한 컨디션 이모지와 라벨을 보여줍니다.</p>
+
+<!-- ===== 7. 설정 탭 ===== -->
+<h2 class="page-break">7. 설정 탭</h2>
+
+<h3>임시보관</h3>
+<p>지금 당장 할 필요가 없어진 할일이 보관됩니다.</p>
+<ul>
+  <li><strong>"복원"</strong> 버튼으로 다시 할일 목록으로 되돌릴 수 있습니다.</li>
+  <li>완전히 불필요하면 상세 화면에서 삭제 가능</li>
+</ul>
+
+<h3>설정 항목</h3>
+<table>
+  <tr><th>항목</th><th>기능</th><th>조작</th></tr>
+  <tr><td>🔔 알림 권한 허용</td><td>푸시 알림을 받기 위한 권한 요청</td><td>터치하여 허용</td></tr>
+  <tr><td>👀 눈 쉬기 알림</td><td>설정된 주기마다 20초간 눈 휴식 화면 표시 (20-20-20 규칙)</td><td>터치할 때마다 주기 변경 (10/15/20/30/45/60분/끄기)</td></tr>
+  <tr><td>🔒 자동 잠금</td><td>미사용 시 자동으로 PIN 잠금 화면으로 전환</td><td>터치할 때마다 시간 변경 (1/3/5/10/30분/끄기)</td></tr>
+  <tr><td>💾 데이터 백업</td><td>모든 데이터를 JSON 파일로 내보내기</td><td>터치하면 파일 다운로드</td></tr>
+  <tr><td>📂 데이터 복원</td><td>백업 파일에서 데이터 가져오기</td><td>터치하여 파일 선택</td></tr>
+</table>
+
+<!-- ===== 8. 할일 등록 ===== -->
+<h2>8. 할일 등록 / 관리</h2>
+<p><strong>+ 버튼</strong>을 누르거나, 달력에서 날짜를 터치하면 새 할일을 등록합니다.</p>
+
+<table>
+  <tr><th>항목</th><th>설명</th><th>필수</th></tr>
+  <tr><td>할 일</td><td>할일 내용</td><td>✅</td></tr>
+  <tr><td>날짜</td><td>예정일 (비워두면 기한 미정)</td><td></td></tr>
+  <tr><td>시간</td><td>예정 시각</td><td></td></tr>
+  <tr><td>카테고리</td><td>업무(파랑) / 개인(보라) / 건강(초록) / 공부(주황) / 기타(회색)</td><td></td></tr>
+  <tr><td>며칠 내 해야 함</td><td>체크하면 '며칠 내' 섹션에 표시</td><td></td></tr>
+  <tr><td>반복</td><td>매일 / 평일만 / 매주 / 매월 자동 반복</td><td></td></tr>
+  <tr><td>알림</td><td>정시에 / 5분~1시간 전 알림</td><td></td></tr>
+  <tr><td>상세 정보</td><td>준비사항, 관련 정보 등</td><td></td></tr>
+</table>
+
+<h3>할일 상태 흐름</h3>
+<div class="feature">
+  <p><strong>할 일</strong> → 완료 처리 → <strong>해낸 일</strong> (기록 탭)</p>
+  <p><strong>할 일</strong> → 보관 처리 → <strong>임시보관</strong> (설정 탭)</p>
+  <p><strong>임시보관 / 해낸 일</strong> → 복원 → 다시 <strong>할 일</strong></p>
+</div>
+
+<div class="tip">오늘 날짜의 미완료 할일은 다음 날 자동으로 이월됩니다.</div>
+<div class="tip">반복 할일은 완료 후 다음 해당일에 자동으로 새로 생성됩니다.</div>
+
+<!-- ===== 9. 알림 ===== -->
+<h2 class="page-break">9. 알림 설정</h2>
+<p>알림을 받으려면 먼저 <strong>설정 탭 → "알림 권한 허용"</strong>을 터치해야 합니다.</p>
+
+<h3>알림 종류</h3>
+<table>
+  <tr><th>알림</th><th>조건</th></tr>
+  <tr><td>⏰ 할일 알림</td><td>시간과 알림을 설정한 할일에 대해 지정 시각에 알림</td></tr>
+  <tr><td>💧 물 마시기</td><td>설정된 주기마다 알림 (목표 미달성 시)</td></tr>
+  <tr><td>습관 알림</td><td>습관에 알림 주기를 설정한 경우 주기마다 알림</td></tr>
+  <tr><td>🍅 뽀모도로</td><td>집중 종료 / 휴식 종료 시 알림</td></tr>
+  <tr><td>👀 눈 쉬기</td><td>설정된 주기마다 20초간 휴식 화면 표시</td></tr>
+</table>
+
+<div class="warn">아이폰 Safari에서는 PWA 푸시 알림이 iOS 16.4 이상에서만 지원됩니다. 안드로이드 Chrome에서는 바로 작동합니다.</div>
+
+<!-- ===== 10. 백업 ===== -->
+<h2>10. 데이터 백업 및 복원</h2>
+
+<h3>백업 (내보내기)</h3>
+<ol>
+  <li>설정 탭 → <strong>"💾 데이터 백업"</strong> 터치</li>
+  <li>JSON 파일이 자동 다운로드됨</li>
+  <li>파일 이름: <code>daily-todo-backup-날짜.json</code></li>
+</ol>
+
+<h3>복원 (가져오기)</h3>
+<ol>
+  <li>설정 탭 → <strong>"📂 데이터 복원"</strong> 터치</li>
+  <li>이전에 백업한 JSON 파일 선택</li>
+  <li>확인 팝업에서 "확인" 터치</li>
+  <li>데이터 복원 완료 (앱 자동 새로고침)</li>
+</ol>
+
+<div class="warn">복원 시 현재 데이터가 백업 파일의 데이터로 <strong>완전히 덮어씌워집니다.</strong></div>
+<div class="tip">주 1회 정도 백업해두면 폰을 바꾸거나 데이터 손실 시 복구할 수 있습니다.</div>
+
+<!-- ===== 11. FAQ ===== -->
+<h2 class="page-break">11. 자주 묻는 질문 (FAQ)</h2>
+
+<h3>Q. 앱이 안 열려요</h3>
+<p>인터넷 연결을 확인하세요. 최초 1회는 인터넷이 필요합니다. 이후에는 오프라인에서도 동작합니다.</p>
+
+<h3>Q. 업데이트는 어떻게 하나요?</h3>
+<p>자동입니다! 앱을 열면 최신 버전이 자동으로 적용됩니다. 데이터는 유지됩니다.</p>
+
+<h3>Q. 다른 기기에서 쓸 수 있나요?</h3>
+<p>백업 파일을 다른 기기로 옮기고 복원하면 됩니다. 자동 동기화는 지원하지 않습니다.</p>
+
+<h3>Q. PIN을 잊어버렸어요</h3>
+<p>잠금 화면 하단의 <strong>"초기화"</strong> 버튼을 누르세요. 모든 데이터가 삭제되고 처음부터 시작합니다. 평소에 백업해두면 복원 가능합니다.</p>
+
+<h3>Q. 알림이 안 와요</h3>
+<ol>
+  <li>설정 탭 → "알림 권한 허용"을 눌렀는지 확인</li>
+  <li>폰 설정 → 해당 브라우저의 알림이 허용되어 있는지 확인</li>
+  <li>아이폰은 iOS 16.4 이상 + 홈 화면에 추가된 상태여야 합니다.</li>
+</ol>
+
+<h3>Q. 데이터가 사라졌어요</h3>
+<p>브라우저의 "사이트 데이터 삭제" 또는 "방문 기록 삭제"를 하면 데이터가 삭제될 수 있습니다. 정기적으로 백업하는 것을 권장합니다.</p>
+
+<h3>Q. 옛날 버전이 계속 보여요</h3>
+<p>브라우저 캐시를 삭제하고 다시 접속하세요. Chrome의 경우 설정 → 개인정보 → "캐시된 이미지 및 파일"만 삭제하면 데이터는 유지됩니다.</p>
+
+<div class="footer">
+  수정's TODO v6.0 | 2026.03<br>
+  https://bboinzg-dev.github.io/daily-todo/
+</div>
+
+</div>
+</body>
+</html>
